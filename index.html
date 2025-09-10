@@ -44,11 +44,6 @@
         textarea {
             min-height: 80px;
             resize: vertical;
-            font-family: Arial, sans-serif;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #0066cc;
         }
         button {
             background-color: #0066cc;
@@ -64,20 +59,20 @@
         button:hover {
             background-color: #0052a3;
         }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .instructions {
-            background-color: #fffbf0;
-            border: 1px solid #f0ad4e;
-            padding: 15px;
+        .email-section {
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 20px;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .email-button {
+            background-color: #4caf50;
+            margin-top: 10px;
+        }
+        .email-button:hover {
+            background-color: #45a049;
         }
         .success {
             background-color: #d4edda;
@@ -88,14 +83,12 @@
             margin-top: 20px;
             display: none;
         }
-        .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+        .instructions {
+            background-color: #fffbf0;
+            border: 1px solid #f0ad4e;
             padding: 15px;
             border-radius: 5px;
-            margin-top: 20px;
-            display: none;
+            margin-bottom: 20px;
         }
         .section-title {
             background: #0066cc;
@@ -105,45 +98,71 @@
             margin-bottom: 15px;
             font-weight: bold;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #0066cc;
-        }
         .template-selector {
             background-color: #e3f2fd;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        select.template-select {
-            font-size: 18px;
+        .email-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .email-options button {
+            flex: 1;
+        }
+        
+        /* Autocomplete styles */
+        .autocomplete-wrapper {
+            position: relative;
+        }
+        .template-search {
+            width: 100%;
             padding: 12px;
-            background-color: white;
-        }
-        .admin-section {
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #0066cc;
             border-radius: 5px;
-            margin-top: 30px;
+            background-color: #fff;
         }
-        .admin-instructions {
-            background-color: #f8f9fa;
+        .template-search:focus {
+            outline: none;
+            border-color: #0052a3;
+            box-shadow: 0 0 5px rgba(0,102,204,0.3);
+        }
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #0066cc;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        .suggestion {
             padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
         }
-        @media (max-width: 600px) {
-            body {
-                margin: 20px auto;
-                padding: 10px;
-            }
-            .container {
-                padding: 20px;
-            }
+        .suggestion:hover {
+            background-color: #f0f8ff;
+        }
+        .suggestion.selected {
+            background-color: #e3f2fd;
+        }
+        .suggestion-match {
+            background-color: #ffeb3b;
+            font-weight: bold;
+        }
+        .no-results {
+            padding: 10px;
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -158,32 +177,36 @@
         
         <div class="instructions">
             <strong>📋 Quick Instructions:</strong><br>
-            1. Select a template from the dropdown (or type to search)<br>
+            1. Type to search for a template (e.g., type "pipe" to find Pipe Connection)<br>
             2. Fill in the certificate holder information<br>
-            3. Add description if needed (optional)<br>
-            4. Click "Generate Certificate"
+            3. Add email address to send copy to holder<br>
+            4. Click "Generate Certificate"<br>
+            5. Use email buttons to send to client
         </div>
 
         <form id="coiForm">
             <div class="template-selector">
-                <label for="templateSelect" style="font-size: 18px; color: #0066cc;">
-                    Select Certificate Template:
+                <label for="templateSearch" style="font-size: 18px; color: #0066cc;">
+                    Search or Select Certificate Template:
                 </label>
-                <select id="templateSelect" class="template-select" required>
-                    <option value="">-- Select a Client Template --</option>
-                    <option value="blank.pdf">Blank Certificate</option>
-                    <option value="burchette.pdf">Burchette & Burchette Hardwood Floors</option>
-                    <option value="panic.pdf">Panic Plumbing LLC</option>
-                    <option value="topnotch.pdf">Top Notch Plumbing</option>
-                </select>
+                <div class="autocomplete-wrapper">
+                    <input type="text" 
+                           id="templateSearch" 
+                           class="template-search" 
+                           placeholder="Start typing client name (e.g., 'pipe' or 'burch')"
+                           autocomplete="off">
+                    <div id="suggestions" class="suggestions"></div>
+                </div>
+                <input type="hidden" id="selectedTemplate" required>
                 
                 <div style="margin-top: 10px;">
-                    <label for="customTemplate" style="font-size: 14px; color: #666;">
-                        Or enter custom template name:
-                    </label>
-                    <input type="text" id="customTemplate" placeholder="e.g., smithroofing.pdf" 
-                           style="font-size: 14px; padding: 8px;">
-                    <small style="color: #999;">Use this if the template was just added and doesn't appear above</small>
+                    <select id="templateSelect" style="width: 100%; padding: 10px;">
+                        <option value="">-- Or select from dropdown --</option>
+                        <option value="blank.pdf">Blank Certificate</option>
+                        <option value="burchette.pdf">Burchette & Burchette Hardwood Floors</option>
+                        <option value="panic.pdf">Panic Plumbing LLC</option>
+                        <option value="topnotch.pdf">Top Notch Plumbing</option>
+                    </select>
                 </div>
             </div>
 
@@ -192,6 +215,11 @@
             <div class="form-group">
                 <label for="holderName">Certificate Holder Name:</label>
                 <input type="text" id="holderName" placeholder="Example: ABC Construction Company" required>
+            </div>
+
+            <div class="form-group">
+                <label for="holderEmail">Certificate Holder Email: (Optional)</label>
+                <input type="email" id="holderEmail" placeholder="client@example.com">
             </div>
 
             <div class="form-group">
@@ -217,41 +245,34 @@
             <div class="section-title">Additional Information (Optional)</div>
             
             <div class="form-group">
-                <label for="description">
-                    Description of Operations / Additional Insured:
-                </label>
-                <textarea id="description" 
-                          placeholder="Example: WISHON CARTER BUILDERS INC, ITS OFFICERS, AGENTS, AND SUBSIDIARIES ARE INCLUDED AS AN ADDITIONAL INSURED..."></textarea>
+                <label for="description">Description of Operations / Additional Insured:</label>
+                <textarea id="description" placeholder="Example: WISHON CARTER BUILDERS INC..."></textarea>
             </div>
 
             <button type="submit" id="generateBtn">Generate Certificate</button>
-            
-            <div class="loading">
-                ⏳ Loading template and generating certificate...
-            </div>
         </form>
 
         <div id="success" class="success">
             ✅ Certificate generated successfully! Check your Downloads folder.
         </div>
-        
-        <div id="error" class="error">
-            ❌ Error: <span id="errorMessage"></span>
-        </div>
 
-        <div class="admin-section">
-            <h3 style="color: #856404; margin-top: 0;">📁 Adding New Client Templates</h3>
-            <div class="admin-instructions">
-                <strong>To add a new client template:</strong><br>
-                1. Upload the PDF to GitHub: <code>coi-generator/pdfs/templates/</code><br>
-                2. Name it like: <code>clientname.pdf</code> (lowercase, no spaces)<br>
-                3. Use the "custom template name" field above to use it immediately<br>
-                4. Later, update the dropdown in index.html for permanent addition<br><br>
-                
-                <strong>Quick naming guide:</strong><br>
-                • Smith Roofing → <code>smithroofing.pdf</code><br>
-                • ABC Construction Inc → <code>abcconstruction.pdf</code><br>
-                • Jones Electric LLC → <code>joneselectric.pdf</code>
+        <div id="emailSection" class="email-section">
+            <h3 style="margin-top: 0;">📧 Email Options</h3>
+            <p>Certificate generated for: <strong id="generatedFor"></strong></p>
+            
+            <div class="email-options">
+                <button onclick="openEmailClient()" class="email-button">
+                    📧 Open Email Program
+                </button>
+                <button onclick="copyEmailTemplate()" class="email-button">
+                    📋 Copy Email Template
+                </button>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                <small>
+                    <strong>Note:</strong> After clicking "Open Email Program", attach the downloaded PDF from your Downloads folder.
+                </small>
             </div>
         </div>
     </div>
@@ -262,108 +283,245 @@
     const REPO_NAME = 'coi-generator';
     const TEMPLATE_PATH = 'pdfs/templates';
     
-    // Get the base URL for templates
-    const getTemplateUrl = (filename) => {
-        // If custom template is specified, use that
-        const customTemplate = document.getElementById('customTemplate').value.trim();
-        if (customTemplate) {
-            // Ensure it ends with .pdf
-            const templateName = customTemplate.endsWith('.pdf') ? customTemplate : customTemplate + '.pdf';
-            return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${templateName}`;
-        }
-        // Otherwise use the selected template
-        return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${filename}`;
+    // Template database - ADD ALL YOUR TEMPLATES HERE
+    const templates = [
+        { file: 'blank.pdf', name: 'Blank Certificate', keywords: ['blank', 'empty', 'template'] },
+        { file: 'burchette.pdf', name: 'Burchette & Burchette Hardwood Floors', keywords: ['burchette', 'hardwood', 'floors', 'wood'] },
+        { file: 'panic.pdf', name: 'Panic Plumbing LLC', keywords: ['panic', 'plumbing', 'plumber', 'water'] },
+        { file: 'topnotch.pdf', name: 'Top Notch Plumbing', keywords: ['top', 'notch', 'plumbing', 'plumber'] },
+        // Add more templates here as you get new clients:
+        // { file: 'pipeconnection.pdf', name: 'Pipe Connection Services', keywords: ['pipe', 'connection', 'piping'] },
+        // { file: 'smithroofing.pdf', name: 'Smith Roofing Company', keywords: ['smith', 'roofing', 'roof'] },
+    ];
+    
+    // Store last generated info for email
+    let lastGeneratedInfo = {
+        holderName: '',
+        holderEmail: '',
+        fileName: '',
+        dateStr: ''
     };
-
-    // Clear custom template when dropdown is selected
-    document.getElementById('templateSelect').addEventListener('change', function() {
-        if (this.value) {
-            document.getElementById('customTemplate').value = '';
+    
+    // Autocomplete functionality
+    let selectedIndex = -1;
+    
+    function searchTemplates(query) {
+        if (!query) return [];
+        
+        const searchTerm = query.toLowerCase();
+        return templates.filter(template => {
+            // Check if name contains search term
+            if (template.name.toLowerCase().includes(searchTerm)) return true;
+            // Check if any keyword matches
+            return template.keywords.some(keyword => keyword.includes(searchTerm));
+        });
+    }
+    
+    function highlightMatch(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<span class="suggestion-match">$1</span>');
+    }
+    
+    function showSuggestions(results, query) {
+        const suggestionsDiv = document.getElementById('suggestions');
+        
+        if (results.length === 0 && query) {
+            suggestionsDiv.innerHTML = '<div class="no-results">No templates found. You can add the filename manually.</div>';
+            suggestionsDiv.style.display = 'block';
+            return;
         }
+        
+        if (results.length === 0) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+        
+        suggestionsDiv.innerHTML = results.map((template, index) => 
+            `<div class="suggestion" data-index="${index}" data-file="${template.file}">
+                ${highlightMatch(template.name, query)}
+            </div>`
+        ).join('');
+        
+        suggestionsDiv.style.display = 'block';
+        selectedIndex = -1;
+    }
+    
+    // Search input handler
+    document.getElementById('templateSearch').addEventListener('input', function(e) {
+        const query = e.target.value;
+        const results = searchTemplates(query);
+        showSuggestions(results, query);
+        
+        // Clear dropdown when searching
+        document.getElementById('templateSelect').value = '';
+        document.getElementById('selectedTemplate').value = '';
     });
-
-    // Clear dropdown when custom template is typed
-    document.getElementById('customTemplate').addEventListener('input', function() {
-        if (this.value) {
+    
+    // Handle suggestion clicks
+    document.getElementById('suggestions').addEventListener('click', function(e) {
+        const suggestion = e.target.closest('.suggestion');
+        if (suggestion) {
+            const file = suggestion.dataset.file;
+            const template = templates.find(t => t.file === file);
+            
+            document.getElementById('templateSearch').value = template.name;
+            document.getElementById('selectedTemplate').value = file;
+            document.getElementById('suggestions').style.display = 'none';
             document.getElementById('templateSelect').value = '';
         }
     });
-
-    // Make state input uppercase
+    
+    // Handle keyboard navigation
+    document.getElementById('templateSearch').addEventListener('keydown', function(e) {
+        const suggestions = document.querySelectorAll('.suggestion');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+            updateSelection(suggestions);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, -1);
+            updateSelection(suggestions);
+        } else if (e.key === 'Enter' && selectedIndex >= 0) {
+            e.preventDefault();
+            suggestions[selectedIndex].click();
+        } else if (e.key === 'Escape') {
+            document.getElementById('suggestions').style.display = 'none';
+        }
+    });
+    
+    function updateSelection(suggestions) {
+        suggestions.forEach((s, i) => {
+            if (i === selectedIndex) {
+                s.classList.add('selected');
+            } else {
+                s.classList.remove('selected');
+            }
+        });
+    }
+    
+    // Handle dropdown selection
+    document.getElementById('templateSelect').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('selectedTemplate').value = this.value;
+            document.getElementById('templateSearch').value = '';
+            document.getElementById('suggestions').style.display = 'none';
+        }
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            document.getElementById('suggestions').style.display = 'none';
+        }
+    });
+    
+    // Get template URL
+    const getTemplateUrl = (filename) => {
+        return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${filename}`;
+    };
+    
+    // Email functions
+    function openEmailClient() {
+        const subject = encodeURIComponent(`Certificate of Insurance - ${lastGeneratedInfo.holderName}`);
+        const body = encodeURIComponent(
+            `Dear ${lastGeneratedInfo.holderName},\n\n` +
+            `Please find attached your Certificate of Insurance dated ${lastGeneratedInfo.dateStr}.\n\n` +
+            `This certificate is provided for your records and confirms your insurance coverage as specified.\n\n` +
+            `If you have any questions or need additional information, please don't hesitate to contact us.\n\n` +
+            `Best regards,\n` +
+            `Bill Layne Insurance Agency\n` +
+            `1283 N Bridge St, Elkin NC 28621\n` +
+            `Phone: (336) 835-1993\n` +
+            `Email: Save@BillLayneInsurance.com`
+        );
+        
+        const mailto = `mailto:${lastGeneratedInfo.holderEmail}?subject=${subject}&body=${body}`;
+        window.open(mailto);
+    }
+    
+    function copyEmailTemplate() {
+        const template = 
+            `To: ${lastGeneratedInfo.holderEmail}\n` +
+            `Subject: Certificate of Insurance - ${lastGeneratedInfo.holderName}\n\n` +
+            `Dear ${lastGeneratedInfo.holderName},\n\n` +
+            `Please find attached your Certificate of Insurance dated ${lastGeneratedInfo.dateStr}.\n\n` +
+            `This certificate is provided for your records and confirms your insurance coverage as specified.\n\n` +
+            `If you have any questions or need additional information, please don't hesitate to contact us.\n\n` +
+            `Best regards,\n` +
+            `Bill Layne Insurance Agency\n` +
+            `1283 N Bridge St, Elkin NC 28621\n` +
+            `Phone: (336) 835-1993\n` +
+            `Email: Save@BillLayneInsurance.com\n\n` +
+            `[Remember to attach: ${lastGeneratedInfo.fileName}]`;
+        
+        navigator.clipboard.writeText(template).then(() => {
+            alert('Email template copied to clipboard! Paste it into your email program and attach the PDF.');
+        });
+    }
+    
+    // Make state uppercase
     document.getElementById('state').addEventListener('input', function(e) {
         e.target.value = e.target.value.toUpperCase();
     });
-
-    // Show/hide messages
-    function showSuccess() {
-        document.getElementById('success').style.display = 'block';
-        document.getElementById('error').style.display = 'none';
-        setTimeout(() => {
-            document.getElementById('success').style.display = 'none';
-        }, 5000);
-    }
-
-    function showError(message) {
-        document.getElementById('errorMessage').textContent = message;
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('success').style.display = 'none';
-    }
-
-    function showLoading(show) {
-        document.querySelector('.loading').style.display = show ? 'block' : 'none';
-        document.getElementById('generateBtn').disabled = show;
-    }
-
+    
     // Handle form submission
     document.getElementById('coiForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         
-        const templateFile = document.getElementById('templateSelect').value;
-        const customTemplate = document.getElementById('customTemplate').value.trim();
+        // Get template from either search or dropdown
+        let templateFile = document.getElementById('selectedTemplate').value || 
+                          document.getElementById('templateSelect').value;
         
-        if (!templateFile && !customTemplate) {
-            showError('Please select a template or enter a custom template name');
+        // If user typed a custom filename in search box
+        if (!templateFile && document.getElementById('templateSearch').value) {
+            const customName = document.getElementById('templateSearch').value;
+            if (customName.includes('.pdf')) {
+                templateFile = customName;
+            } else {
+                templateFile = customName + '.pdf';
+            }
+        }
+        
+        if (!templateFile) {
+            alert('Please select or enter a template');
             return;
         }
-
-        showLoading(true);
         
         try {
-            // Get the template URL
-            const templateUrl = getTemplateUrl(templateFile || customTemplate);
-            console.log('Loading template from:', templateUrl);
-            
+            const templateUrl = getTemplateUrl(templateFile);
             const response = await fetch(templateUrl);
+            
             if (!response.ok) {
-                throw new Error('Template not found. Make sure the PDF is uploaded to GitHub and the name is correct.');
+                throw new Error('Template not found. Make sure the file is uploaded to GitHub.');
             }
             
             const arrayBuffer = await response.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-            
-            // Get the first page
             const pages = pdfDoc.getPages();
             const firstPage = pages[0];
             
-            // Embed fonts
             const helveticaFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
             const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
             
             // Get form data
             const holderName = document.getElementById('holderName').value.toUpperCase();
+            const holderEmail = document.getElementById('holderEmail').value;
             const address = document.getElementById('address').value.toUpperCase();
             const city = document.getElementById('city').value.toUpperCase();
             const state = document.getElementById('state').value.toUpperCase();
             const zip = document.getElementById('zip').value;
             const description = document.getElementById('description').value.toUpperCase();
             
-            // Add today's date
+            // Date
             const today = new Date();
             const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '/' + 
                            today.getDate().toString().padStart(2, '0') + '/' + 
                            today.getFullYear();
             
-            // DATE POSITION (Top right date box)
+            // Add text to PDF
             firstPage.drawText(dateStr, {
                 x: 520,
                 y: 750,
@@ -372,7 +530,6 @@
                 color: PDFLib.rgb(0, 0, 0)
             });
             
-            // CERTIFICATE HOLDER (Bottom left box)
             firstPage.drawText(holderName, {
                 x: 60,
                 y: 115,
@@ -397,7 +554,7 @@
                 color: PDFLib.rgb(0, 0, 0)
             });
             
-            // DESCRIPTION OF OPERATIONS (Middle section)
+            // Description
             if (description && description.trim() !== '') {
                 const maxWidth = 450;
                 const fontSize = 9;
@@ -434,32 +591,40 @@
                 }
             }
             
-            // Generate the PDF
+            // Generate PDF
             const pdfBytes = await pdfDoc.save();
-            
-            // Create filename
             const holderNameClean = holderName.replace(/[^a-z0-9]/gi, '_');
             const fileName = `COI_${holderNameClean}_${dateStr.replace(/\//g, '-')}.pdf`;
             
-            // Download the PDF
+            // Store info for email
+            lastGeneratedInfo = {
+                holderName: holderName,
+                holderEmail: holderEmail || 'client@email.com',
+                fileName: fileName,
+                dateStr: dateStr
+            };
+            
+            // Download
             download(pdfBytes, fileName, "application/pdf");
             
-            showSuccess();
+            // Show success and email options
+            document.getElementById('success').style.display = 'block';
+            document.getElementById('generatedFor').textContent = holderName;
+            document.getElementById('emailSection').style.display = 'block';
             
             // Reset form
             document.getElementById('holderName').value = '';
+            document.getElementById('holderEmail').value = '';
             document.getElementById('address').value = '';
             document.getElementById('city').value = '';
             document.getElementById('state').value = '';
             document.getElementById('zip').value = '';
             document.getElementById('description').value = '';
-            document.getElementById('customTemplate').value = '';
+            document.getElementById('templateSearch').value = '';
+            document.getElementById('selectedTemplate').value = '';
             
         } catch (error) {
-            console.error('Error:', error);
-            showError(error.message || 'Failed to generate certificate. Please try again.');
-        } finally {
-            showLoading(false);
+            alert('Error: ' + error.message);
         }
     });
     </script>
