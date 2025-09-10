@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill Layne Insurance - COI Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/downloadjs/1.4.7/download.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        .instructions {
+            background-color: #fffbf0;
+            border: 1px solid #f0ad4e;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        .section-title {
+            background: #0066cc;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #0066cc;
+        }
+        .template-selector {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        select.template-select {
+            font-size: 18px;
+            padding: 12px;
+            background-color: white;
+        }
+        @media (max-width: 600px) {
+            body {
+                margin: 20px auto;
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h2 style="color: #0066cc; margin: 0;">BILL LAYNE INSURANCE AGENCY</h2>
+            <p style="margin: 5px 0; color: #666;">1283 N Bridge St, Elkin NC 28621 • (336) 835-1993</p>
+        </div>
+        
+        <h1>Certificate of Insurance Generator</h1>
+        
+        <div class="instructions">
+            <strong>📋 Quick Instructions:</strong><br>
+            1. Select a template from the dropdown<br>
+            2. Fill in the certificate holder information<br>
+            3. Add description if needed (optional)<br>
+            4. Click "Generate Certificate"
+        </div>
+
+        <form id="coiForm">
+            <div class="template-selector">
+                <label for="templateSelect" style="font-size: 18px; color: #0066cc;">
+                    Select Certificate Template:
+                </label>
+                <select id="templateSelect" class="template-select" required>
+                    <option value="">-- Select a Client Template --</option>
+                    <option value="burchette.pdf">Burchette & Burchette Hardwood Floors</option>
+                    <option value="topnotch.pdf">Top Notch Plumbing</option>
+                    <!-- Add more templates here as you upload them to GitHub -->
+                    <!-- Example: <option value="clientname.pdf">Client Company Name</option> -->
+                </select>
+            </div>
+
+            <div class="section-title">Certificate Holder Information</div>
+
+            <div class="form-group">
+                <label for="holderName">Certificate Holder Name:</label>
+                <input type="text" id="holderName" placeholder="Example: ABC Construction Company" required>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Street Address:</label>
+                <input type="text" id="address" placeholder="Example: 123 Main Street" required>
+            </div>
+
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city" placeholder="Example: Winston-Salem" required>
+            </div>
+
+            <div class="form-group">
+                <label for="state">State (2 letters):</label>
+                <input type="text" id="state" maxlength="2" placeholder="NC" required style="text-transform: uppercase;">
+            </div>
+
+            <div class="form-group">
+                <label for="zip">ZIP Code:</label>
+                <input type="text" id="zip" placeholder="27101" required>
+            </div>
+
+            <div class="section-title">Additional Information (Optional)</div>
+            
+            <div class="form-group">
+                <label for="description">
+                    Description of Operations / Additional Insured:
+                </label>
+                <textarea id="description" 
+                          placeholder="Example: WISHON CARTER BUILDERS INC, ITS OFFICERS, AGENTS, AND SUBSIDIARIES ARE INCLUDED AS AN ADDITIONAL INSURED..."></textarea>
+            </div>
+
+            <button type="submit" id="generateBtn">Generate Certificate</button>
+            
+            <div class="loading">
+                ⏳ Loading template and generating certificate...
+            </div>
+        </form>
+
+        <div id="success" class="success">
+            ✅ Certificate generated successfully! Check your Downloads folder.
+        </div>
+        
+        <div id="error" class="error">
+            ❌ Error: <span id="errorMessage"></span>
+        </div>
+    </div>
+
+    <script>
+    // ============================================
+    // IMPORTANT: CHANGE THIS TO YOUR GITHUB USERNAME!
+    // ============================================
+    const GITHUB_USERNAME = 'YOUR_GITHUB_USERNAME'; // ← CHANGE THIS!
+    const REPO_NAME = 'coi-generator';
+    const TEMPLATE_PATH = 'pdfs/templates';
+    
+    // Get the base URL for templates
+    const getTemplateUrl = (filename) => {
+        return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${filename}`;
+    };
+
+    // Make state input uppercase
+    document.getElementById('state').addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase();
+    });
+
+    // Show/hide messages
+    function showSuccess() {
+        document.getElementById('success').style.display = 'block';
+        document.getElementById('error').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('success').style.display = 'none';
+        }, 5000);
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('success').style.display = 'none';
+    }
+
+    function showLoading(show) {
+        document.querySelector('.loading').style.display = show ? 'block' : 'none';
+        document.getElementById('generateBtn').disabled = show;
+    }
+
+    // Handle form submission
+    document.getElementById('coiForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const templateFile = document.getElementById('templateSelect').value;
+        if (!templateFile) {
+            showError('Please select a template');
+            return;
+        }
+
+        showLoading(true);
+        
+        try {
+            // Fetch the template PDF from GitHub
+            const templateUrl = getTemplateUrl(templateFile);
+            console.log('Loading template from:', templateUrl);
+            
+            const response = await fetch(templateUrl);
+            if (!response.ok) {
+                throw new Error('Failed to load template. Please check your internet connection.');
+            }
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            
+            // Get the first page
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+            
+            // Embed fonts
+            const helveticaFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            
+            // Get form data
+            const holderName = document.getElementById('holderName').value.toUpperCase();
+            const address = document.getElementById('address').value.toUpperCase();
+            const city = document.getElementById('city').value.toUpperCase();
+            const state = document.getElementById('state').value.toUpperCase();
+            const zip = document.getElementById('zip').value;
+            const description = document.getElementById('description').value.toUpperCase();
+            
+            // Add today's date
+            const today = new Date();
+            const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                           today.getDate().toString().padStart(2, '0') + '/' + 
+                           today.getFullYear();
+            
+            // ========================================
+            // PERFECT POSITIONS - DO NOT CHANGE THESE!
+            // ========================================
+            
+            // DATE POSITION (Top right date box)
+            firstPage.drawText(dateStr, {
+                x: 520,  // Perfect horizontal position
+                y: 750,  // Perfect vertical position in date box
+                size: 10,
+                font: helveticaFont,
+                color: PDFLib.rgb(0, 0, 0)
+            });
+            
+            // CERTIFICATE HOLDER (Bottom left box)
+            firstPage.drawText(holderName, {
+                x: 60,
+                y: 115,  // Perfect position for name
+                size: 10,
+                font: helveticaBold,
+                color: PDFLib.rgb(0, 0, 0)
+            });
+            
+            firstPage.drawText(address, {
+                x: 60,
+                y: 100,  // Perfect position for address
+                size: 10,
+                font: helveticaFont,
+                color: PDFLib.rgb(0, 0, 0)
+            });
+            
+            firstPage.drawText(`${city}, ${state} ${zip}`, {
+                x: 60,
+                y: 85,   // Perfect position for city/state/zip
+                size: 10,
+                font: helveticaFont,
+                color: PDFLib.rgb(0, 0, 0)
+            });
+            
+            // DESCRIPTION OF OPERATIONS (Middle section)
+            if (description && description.trim() !== '') {
+                const maxWidth = 450;
+                const fontSize = 9;
+                const words = description.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                for (const word of words) {
+                    const testLine = currentLine ? `${currentLine} ${word}` : word;
+                    const width = helveticaFont.widthOfTextAtSize(testLine, fontSize);
+                    
+                    if (width > maxWidth && currentLine) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+                
+                let yPosition = 210;  // Perfect position for description box
+                for (const line of lines) {
+                    firstPage.drawText(line, {
+                        x: 60,
+                        y: yPosition,
+                        size: fontSize,
+                        font: helveticaFont,
+                        color: PDFLib.rgb(0, 0, 0)
+                    });
+                    yPosition -= 12;
+                    if (yPosition < 170) break;  // Don't overlap with certificate holder
+                }
+            }
+            
+            // Generate the PDF
+            const pdfBytes = await pdfDoc.save();
+            
+            // Create filename
+            const holderNameClean = holderName.replace(/[^a-z0-9]/gi, '_');
+            const fileName = `COI_${holderNameClean}_${dateStr.replace(/\//g, '-')}.pdf`;
+            
+            // Download the PDF
+            download(pdfBytes, fileName, "application/pdf");
+            
+            showSuccess();
+            
+            // Reset form (except template selection)
+            document.getElementById('holderName').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('state').value = '';
+            document.getElementById('zip').value = '';
+            document.getElementById('description').value = '';
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showError(error.message || 'Failed to generate certificate. Please try again.');
+        } finally {
+            showLoading(false);
+        }
+    });
+    </script>
+</body>
+</html>
