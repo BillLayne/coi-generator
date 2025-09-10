@@ -72,10 +72,6 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .logo img {
-            max-width: 200px;
-            height: auto;
-        }
         .instructions {
             background-color: #fffbf0;
             border: 1px solid #f0ad4e;
@@ -126,6 +122,20 @@
             padding: 12px;
             background-color: white;
         }
+        .admin-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        .admin-instructions {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
         @media (max-width: 600px) {
             body {
                 margin: 20px auto;
@@ -148,7 +158,7 @@
         
         <div class="instructions">
             <strong>📋 Quick Instructions:</strong><br>
-            1. Select a template from the dropdown<br>
+            1. Select a template from the dropdown (or type to search)<br>
             2. Fill in the certificate holder information<br>
             3. Add description if needed (optional)<br>
             4. Click "Generate Certificate"
@@ -160,13 +170,21 @@
                     Select Certificate Template:
                 </label>
                 <select id="templateSelect" class="template-select" required>
-    <option value="">-- Select a Client Template --</option>
-    <option value="blank.pdf">Blank Certificate</option>
-    <option value="burchette.pdf">Burchette & Burchette Hardwood Floors</option>
-    <option value="panic.pdf">Panic Plumbing LLC</option>
-    <option value="topnotch.pdf">Top Notch Plumbing</option>
-    <!-- Add more templates here as you upload them to GitHub -->
-</select>
+                    <option value="">-- Select a Client Template --</option>
+                    <option value="blank.pdf">Blank Certificate</option>
+                    <option value="burchette.pdf">Burchette & Burchette Hardwood Floors</option>
+                    <option value="panic.pdf">Panic Plumbing LLC</option>
+                    <option value="topnotch.pdf">Top Notch Plumbing</option>
+                </select>
+                
+                <div style="margin-top: 10px;">
+                    <label for="customTemplate" style="font-size: 14px; color: #666;">
+                        Or enter custom template name:
+                    </label>
+                    <input type="text" id="customTemplate" placeholder="e.g., smithroofing.pdf" 
+                           style="font-size: 14px; padding: 8px;">
+                    <small style="color: #999;">Use this if the template was just added and doesn't appear above</small>
+                </div>
             </div>
 
             <div class="section-title">Certificate Holder Information</div>
@@ -220,20 +238,56 @@
         <div id="error" class="error">
             ❌ Error: <span id="errorMessage"></span>
         </div>
+
+        <div class="admin-section">
+            <h3 style="color: #856404; margin-top: 0;">📁 Adding New Client Templates</h3>
+            <div class="admin-instructions">
+                <strong>To add a new client template:</strong><br>
+                1. Upload the PDF to GitHub: <code>coi-generator/pdfs/templates/</code><br>
+                2. Name it like: <code>clientname.pdf</code> (lowercase, no spaces)<br>
+                3. Use the "custom template name" field above to use it immediately<br>
+                4. Later, update the dropdown in index.html for permanent addition<br><br>
+                
+                <strong>Quick naming guide:</strong><br>
+                • Smith Roofing → <code>smithroofing.pdf</code><br>
+                • ABC Construction Inc → <code>abcconstruction.pdf</code><br>
+                • Jones Electric LLC → <code>joneselectric.pdf</code>
+            </div>
+        </div>
     </div>
 
     <script>
-    // ============================================
-    // IMPORTANT: CHANGE THIS TO YOUR GITHUB USERNAME!
-    // ============================================
-    const GITHUB_USERNAME = 'BillLayne'; // Your actual username
+    // Configuration
+    const GITHUB_USERNAME = 'BillLayne';
     const REPO_NAME = 'coi-generator';
     const TEMPLATE_PATH = 'pdfs/templates';
     
     // Get the base URL for templates
     const getTemplateUrl = (filename) => {
+        // If custom template is specified, use that
+        const customTemplate = document.getElementById('customTemplate').value.trim();
+        if (customTemplate) {
+            // Ensure it ends with .pdf
+            const templateName = customTemplate.endsWith('.pdf') ? customTemplate : customTemplate + '.pdf';
+            return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${templateName}`;
+        }
+        // Otherwise use the selected template
         return `https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/${TEMPLATE_PATH}/${filename}`;
     };
+
+    // Clear custom template when dropdown is selected
+    document.getElementById('templateSelect').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('customTemplate').value = '';
+        }
+    });
+
+    // Clear dropdown when custom template is typed
+    document.getElementById('customTemplate').addEventListener('input', function() {
+        if (this.value) {
+            document.getElementById('templateSelect').value = '';
+        }
+    });
 
     // Make state input uppercase
     document.getElementById('state').addEventListener('input', function(e) {
@@ -265,21 +319,23 @@
         event.preventDefault();
         
         const templateFile = document.getElementById('templateSelect').value;
-        if (!templateFile) {
-            showError('Please select a template');
+        const customTemplate = document.getElementById('customTemplate').value.trim();
+        
+        if (!templateFile && !customTemplate) {
+            showError('Please select a template or enter a custom template name');
             return;
         }
 
         showLoading(true);
         
         try {
-            // Fetch the template PDF from GitHub
-            const templateUrl = getTemplateUrl(templateFile);
+            // Get the template URL
+            const templateUrl = getTemplateUrl(templateFile || customTemplate);
             console.log('Loading template from:', templateUrl);
             
             const response = await fetch(templateUrl);
             if (!response.ok) {
-                throw new Error('Failed to load template. Please check your internet connection.');
+                throw new Error('Template not found. Make sure the PDF is uploaded to GitHub and the name is correct.');
             }
             
             const arrayBuffer = await response.arrayBuffer();
@@ -307,14 +363,10 @@
                            today.getDate().toString().padStart(2, '0') + '/' + 
                            today.getFullYear();
             
-            // ========================================
-            // PERFECT POSITIONS - DO NOT CHANGE THESE!
-            // ========================================
-            
             // DATE POSITION (Top right date box)
             firstPage.drawText(dateStr, {
-                x: 520,  // Perfect horizontal position
-                y: 750,  // Perfect vertical position in date box
+                x: 520,
+                y: 750,
                 size: 10,
                 font: helveticaFont,
                 color: PDFLib.rgb(0, 0, 0)
@@ -323,7 +375,7 @@
             // CERTIFICATE HOLDER (Bottom left box)
             firstPage.drawText(holderName, {
                 x: 60,
-                y: 115,  // Perfect position for name
+                y: 115,
                 size: 10,
                 font: helveticaBold,
                 color: PDFLib.rgb(0, 0, 0)
@@ -331,7 +383,7 @@
             
             firstPage.drawText(address, {
                 x: 60,
-                y: 100,  // Perfect position for address
+                y: 100,
                 size: 10,
                 font: helveticaFont,
                 color: PDFLib.rgb(0, 0, 0)
@@ -339,7 +391,7 @@
             
             firstPage.drawText(`${city}, ${state} ${zip}`, {
                 x: 60,
-                y: 85,   // Perfect position for city/state/zip
+                y: 85,
                 size: 10,
                 font: helveticaFont,
                 color: PDFLib.rgb(0, 0, 0)
@@ -368,7 +420,7 @@
                     lines.push(currentLine);
                 }
                 
-                let yPosition = 210;  // Perfect position for description box
+                let yPosition = 210;
                 for (const line of lines) {
                     firstPage.drawText(line, {
                         x: 60,
@@ -378,7 +430,7 @@
                         color: PDFLib.rgb(0, 0, 0)
                     });
                     yPosition -= 12;
-                    if (yPosition < 170) break;  // Don't overlap with certificate holder
+                    if (yPosition < 170) break;
                 }
             }
             
@@ -394,13 +446,14 @@
             
             showSuccess();
             
-            // Reset form (except template selection)
+            // Reset form
             document.getElementById('holderName').value = '';
             document.getElementById('address').value = '';
             document.getElementById('city').value = '';
             document.getElementById('state').value = '';
             document.getElementById('zip').value = '';
             document.getElementById('description').value = '';
+            document.getElementById('customTemplate').value = '';
             
         } catch (error) {
             console.error('Error:', error);
