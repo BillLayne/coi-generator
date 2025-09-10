@@ -438,8 +438,12 @@
             `Email: Save@BillLayneInsurance.com`
         );
         
-        const mailto = `mailto:${lastGeneratedInfo.holderEmail}?subject=${subject}&body=${body}`;
-        window.open(mailto);
+        // Open Gmail in new tab with pre-filled compose window
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${lastGeneratedInfo.holderEmail}&su=${subject}&body=${body}`;
+        window.open(gmailUrl, '_blank');
+        
+        // Show reminder about attaching PDF
+        alert('Gmail will open in a new tab. Remember to attach the PDF file: ' + lastGeneratedInfo.fileName + ' from your Downloads folder before sending.');
     }
     
     function copyEmailTemplate() {
